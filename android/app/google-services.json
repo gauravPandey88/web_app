@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "494428248102",
+    "project_id": "web-app-kmy3v3",
+    "storage_bucket": "web-app-kmy3v3.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:494428248102:android:107dfb6871bb278ebd6ee7",
+        "android_client_info": {
+          "package_name": "com.mycompany.webapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCN5KFumJJ389TRUyp8GPjO4-QwT_zTEnQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
