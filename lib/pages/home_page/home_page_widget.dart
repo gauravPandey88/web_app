@@ -50,7 +50,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
           : FocusScope.of(context).unfocus(),
       child: Scaffold(
         key: scaffoldKey,
-        backgroundColor: FlutterFlowTheme.of(context).alternate,
+        backgroundColor: FlutterFlowTheme.of(context).primary,
         drawer: Drawer(
           elevation: 16.0,
           child: WebViewAware(
