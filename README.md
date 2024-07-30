@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # web_app
 Web App
 
