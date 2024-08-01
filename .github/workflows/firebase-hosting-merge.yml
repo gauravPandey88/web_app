@@ -12,12 +12,39 @@
 #
 # Modify FIREBASE_SERVICE_ACCOUNT_MYPROJECT and FIREBASE_PROJECT_NAME (Lines 56/58).
 
-name: Flutter Firebase Deployment
+name: Flutter build web and mobile
 on:
   push:
     branches:
       - main
 jobs:
+  build-android:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 'stable'
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Run tests
+        run: flutter test
+
+      - name: Build APK
+        run: flutter build apk --release
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v2
+        with:
+          name: app-release
+          path: build/app/outputs/flutter-apk/app-release.apk
   build_web:
     name: Build Flutter (Web)
     runs-on: ubuntu-latest
