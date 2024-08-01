@@ -105,6 +105,8 @@ jobs:
       - name: Download and Set Up Firebase CLI
         run: |
           curl -sL https://firebase.tools | bash
+          echo $FIREBASE_SERVICE_ACCOUNT_KEY | base64 --decode > $GITHUB_WORKSPACE/firebase_service_account.json
+          firebase auth:login --creds $GITHUB_WORKSPACE/firebase_service_account.json
 
       - name: Upload to Firebase App Distribution
         env:
@@ -112,7 +114,7 @@ jobs:
           ANDROID_FIREBASE_APP_ID: ${{ secrets.ANDROID_FIREBASE_APP_ID }}
         run: |
             echo $FIREBASE_SERVICE_ACCOUNT_KEY | base64 --decode > $GITHUB_WORKSPACE/firebase_service_account.json
-            curl -sL https://firebase.tools | bash
+            curl -sL https://firebase.tools | upgrade = true bash
             firebase distribution:distribute /home/runner/work/web_app/web_app/build/app/outputs/flutter-apk/app-release.apk \
               --app $ANDROID_FIREBASE_APP_ID \
               --token $FIREBASE_TOKEN
