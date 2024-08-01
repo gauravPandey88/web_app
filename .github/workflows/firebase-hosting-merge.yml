@@ -81,12 +81,6 @@ jobs:
           distribution: 'adopt'
           java-version: '17'
 
-      - name: Set up JDK 17
-        uses: actions/setup-java@v2
-        with:
-          distribution: 'adopt'
-          java-version: '17'
-
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -101,23 +95,28 @@ jobs:
       - name: Build APK
         run: flutter build apk --release
 
-      - name: Upload APK
+      - name: Upload APK Artifact
         uses: actions/upload-artifact@v2
         with:
           name: app-release
           path: build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: warn
+
+      - name: Download and Set Up Firebase CLI
+        run: |
+          curl -sL https://firebase.tools | bash
 
       - name: Upload to Firebase App Distribution
-        uses: actions/upload-artifact@v2
         env:
           FIREBASE_SERVICE_ACCOUNT_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}
           ANDROID_FIREBASE_APP_ID: ${{ secrets.ANDROID_FIREBASE_APP_ID }}
-          run: |
+        run: |
             echo $FIREBASE_SERVICE_ACCOUNT_KEY | base64 --decode > $GITHUB_WORKSPACE/firebase_service_account.json
             curl -sL https://firebase.tools | bash
             firebase distribution:distribute /home/runner/work/web_app/web_app/build/app/outputs/flutter-apk/app-release.apk \
               --app $ANDROID_FIREBASE_APP_ID \
               --token $FIREBASE_TOKEN
+
   build_web:
     name: Build Flutter (Web)
     runs-on: ubuntu-latest
