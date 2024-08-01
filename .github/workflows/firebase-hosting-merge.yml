@@ -117,7 +117,7 @@ jobs:
             curl -sL https://firebase.tools | bash
             firebase distribution:distribute build/app/outputs/flutter-apk/app-release.apk \
               --app $ANDROID_FIREBASE_APP_ID \
-              --token "$(firebase login:ci --no-localhost --project web-app-kmy3v3 < $GITHUB_WORKSPACE/firebase_service_account.json)"
+              --token $FIREBASE_TOKEN
   build_web:
     name: Build Flutter (Web)
     runs-on: ubuntu-latest
