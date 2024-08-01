@@ -18,6 +18,51 @@ on:
     branches:
       - main
 jobs:
+  build-ios:
+    name: Build iOS IPA
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 'stable'
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Set up Xcode
+        run: sudo xcode-select --switch /Applications/Xcode_12.5.app
+
+      - name: Decrypt and install certificates and provisioning profiles
+        run: |
+          mkdir -p ~/certs
+          openssl aes-256-cbc -K ${{ secrets.CERT_KEY }} -iv ${{ secrets.CERT_IV }} -in certs/certs.tar.enc -out certs/certs.tar -d
+          tar xvf certs/certs.tar -C ~/certs
+          sudo mkdir -p /Users/runner/Library/MobileDevice/Provisioning\ Profiles
+          sudo cp ~/certs/*.mobileprovision /Users/runner/Library/MobileDevice/Provisioning\ Profiles/
+          security import ~/certs/Certificates.p12 -P ${{ secrets.CERT_PASSWORD }}
+
+      - name: Build IPA
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_PROVISIONING_PROFILE: ${{ secrets.APPLE_PROVISIONING_PROFILE }}
+        run: flutter build ios --release --no-codesign
+
+      - name: Package IPA
+        run: |
+          xcodebuild -exportArchive -archivePath build/ios/iphoneos/Runner.xcarchive \
+          -exportPath build/ios/ipa \
+          -exportOptionsPlist exportOptions.plist
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v2
+        with:
+          name: app-release
+          path: build/ios/ipa/Runner.ipa
   build-android:
     name: Build Android APK
     runs-on: ubuntu-latest
