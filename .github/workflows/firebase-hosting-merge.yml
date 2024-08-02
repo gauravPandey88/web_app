@@ -114,9 +114,9 @@ jobs:
         run: |
             echo $FIREBASE_SERVICE_ACCOUNT_KEY | base64 --decode > $GITHUB_WORKSPACE/firebase_service_account.json
             curl -sL https://firebase.tools | bash
+            firebase use --add <web-app-kmy3v3>
             firebase distribution:distribute /home/runner/work/web_app/web_app/build/app/outputs/flutter-apk/app-release.apk \
-              --app $ANDROID_FIREBASE_APP_ID \
-              --token $FIREBASE_TOKEN
+              --app $ANDROID_FIREBASE_APP_ID
 
   build_web:
     name: Build Flutter (Web)
