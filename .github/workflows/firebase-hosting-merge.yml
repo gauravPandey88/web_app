@@ -21,137 +21,198 @@ on:
     branches:
       - main
 jobs:
-  build-ios:
-    name: Build iOS IPA
+  build:
+    name : Build & Release
     runs-on: macos-latest
+    permissions:
+      contents: write
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
+      - uses: actions/checkout@v2
+      - uses: actions/setup-java@v1
         with:
-          flutter-version: '3.22.0'
-          channel: 'stable'
-
-      - name: Install dependencies
-        run: flutter pub get
-
-      - name: Set up Xcode
-        run: sudo xcode-select --switch /Applications/Xcode_12.5.app
-
-      - name: Decrypt and install certificates and provisioning profiles
-        run: |
-          mkdir -p ~/certs
-          openssl aes-256-cbc -K ${{ secrets.CERT_KEY }} -iv ${{ secrets.CERT_IV }} -in certs/certs.tar.enc -out certs/certs.tar -d
-          tar xvf certs/certs.tar -C ~/certs
-          sudo mkdir -p /Users/runner/Library/MobileDevice/Provisioning\ Profiles
-          sudo cp ~/certs/*.mobileprovision /Users/runner/Library/MobileDevice/Provisioning\ Profiles/
-          security import ~/certs/Certificates.p12 -P ${{ secrets.CERT_PASSWORD }}
-
-      - name: Build IPA
-        env:
-          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
-          APPLE_PROVISIONING_PROFILE: ${{ secrets.APPLE_PROVISIONING_PROFILE }}
-        run: flutter build ios --release --no-codesign
-
-      - name: Package IPA
-        run: |
-          xcodebuild -exportArchive -archivePath build/ios/iphoneos/Runner.xcarchive \
-          -exportPath build/ios/ipa \
-          -exportOptionsPlist exportOptions.plist
-
-      - name: Upload IPA
-        uses: actions/upload-artifact@v2
+          java-version: '12.0.0'
+      - uses: subosito/flutter-action@v1
         with:
-          name: app-release
-          path: build/ios/ipa/Runner.ipa
-  build-android:
-    name: Build Android APK
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Set up JDK 17
-        uses: actions/setup-java@v2
-        with:
-          distribution: 'adopt'
-          java-version: '17'
-
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.22.0'
-          channel: 'stable'
-      - name: Install dependencies
-        run: flutter pub get
-
-      - name: Run tests
-        run: flutter test
+          flutter-version: '3.19.1'
 
       - name: Build APK
         run: flutter build apk --release
 
-      - name: Upload APK Artifact
+      - name: Push to Release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: build/app/outputs/flutter-apk/app-release.apk
+          tag: v1.1.${{ github.run_number }}
+          token: ${{ secrets.FIREBASE_TOKEN }}
+          name: Firebase Deploy
+
+      # build here
+      - name: Upload headquarter artifact
         uses: actions/upload-artifact@v2
         with:
-          name: app-release
-          path: build/app/outputs/flutter-apk/app-release.apk
-          if-no-files-found: warn
+          name: app-artifacts
+          path: |
+            build/app/outputs/flutter-apk/app-release.apk
+            
 
-      - name: Download and Set Up Firebase CLI
-        run: |
-          curl -sL https://firebase.tools | bash
-          echo $FIREBASE_SERVICE_ACCOUNT_KEY | base64 --decode > $GITHUB_WORKSPACE/firebase_service_account.json
-
-      - name:  Authenticate with Firebase
-        env:
-          FIREBASE_SERVICE_ACCOUNT_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}
-        run: |
-             echo $FIREBASE_SERVICE_ACCOUNT_KEY | base64 --decode > $GITHUB_WORKSPACE/firebase_service_account.json
-
-      - name: Upload to Firebase App Distribution
-        env:
-          FIREBASE_SERVICE_ACCOUNT_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}
-          ANDROID_FIREBASE_APP_ID: ${{ secrets.ANDROID_FIREBASE_APP_ID }}
-        run: |
-             appdistribution: distribute /home/runner/work/web_app/web_app/build/app/outputs/flutter-apk/app-release.apk $ANDROID_FIREBASE_APP_ID
-
-  build_web:
-    name: Build Flutter (Web)
+  distribute_android_headquarter:
+    needs: build
+    name : Deploy the Headquarter apk to the Firebase
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v3
-      - uses: subosito/flutter-action@v1
+      - uses: actions/checkout@v2
+      - uses: actions/setup-java@v1
         with:
-          flutter-version: '3.22.0' # Replace with your project's version of Flutter.
-          channel: 'stable'
-      - run: flutter pub get
-      - run: flutter config --enable-web
-      - run: flutter build web
-      - name: Archive Production Artifact
-        uses: actions/upload-artifact@master
+          java-version: '12.0.0'
+      - uses: actions/download-artifact@v2
         with:
-          name: web-build
-          path: build/web
-  deploy:
-    needs: build_web
-    runs-on: ubuntu-latest
-    steps:
-      - name: checkout
-        uses: actions/checkout@v3
-      - name: Download Artifact
-        uses: actions/download-artifact@master
+          name: app-artifacts
+
+      - name: Upload headquarter artifact to Firebase App Distribution
+        uses: wzieba/Firebase-Distribution-Github-Action@v1
         with:
-          name: web-build
-          path: build/web
-      - name: Deploy to Firebase
-        uses: FirebaseExtended/action-hosting-deploy@v0
-        with:
-          repoToken: '${{ secrets.GITHUB_TOKEN }}'
-          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_WEB_APP_KMY3V3 }}'
-          channelId: live
-          projectId: web-app-kmy3v3
+          debug: true
+          appId: ${{secrets.ANDROID_FIREBASE_APP_ID}}
+          serviceCredentialsFileContent: ${{secrets.FIREBASE_SERVICE_ACCOUNT_KEY}}
+          groups: test
+          file: app-release.apk
+
+
+#  build-ios:
+#    name: Build iOS IPA
+#    runs-on: macos-latest
+#
+#    steps:
+#      - name: Checkout code
+#        uses: actions/checkout@v3
+#
+#      - name: Set up Flutter
+#        uses: subosito/flutter-action@v2
+#        with:
+#          flutter-version: '3.22.0'
+#          channel: 'stable'
+#
+#      - name: Install dependencies
+#        run: flutter pub get
+#
+#      - name: Set up Xcode
+#        run: sudo xcode-select --switch /Applications/Xcode_12.5.app
+#
+#      - name: Decrypt and install certificates and provisioning profiles
+#        run: |
+#          mkdir -p ~/certs
+#          openssl aes-256-cbc -K ${{ secrets.CERT_KEY }} -iv ${{ secrets.CERT_IV }} -in certs/certs.tar.enc -out certs/certs.tar -d
+#          tar xvf certs/certs.tar -C ~/certs
+#          sudo mkdir -p /Users/runner/Library/MobileDevice/Provisioning\ Profiles
+#          sudo cp ~/certs/*.mobileprovision /Users/runner/Library/MobileDevice/Provisioning\ Profiles/
+#          security import ~/certs/Certificates.p12 -P ${{ secrets.CERT_PASSWORD }}
+#
+#      - name: Build IPA
+#        env:
+#          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+#          APPLE_PROVISIONING_PROFILE: ${{ secrets.APPLE_PROVISIONING_PROFILE }}
+#        run: flutter build ios --release --no-codesign
+#
+#      - name: Package IPA
+#        run: |
+#          xcodebuild -exportArchive -archivePath build/ios/iphoneos/Runner.xcarchive \
+#          -exportPath build/ios/ipa \
+#          -exportOptionsPlist exportOptions.plist
+#
+#      - name: Upload IPA
+#        uses: actions/upload-artifact@v2
+#        with:
+#          name: app-release
+#          path: build/ios/ipa/Runner.ipa
+#  build-android:
+#    name: Build Android APK
+#    runs-on: ubuntu-latest
+#
+#    steps:
+#      - name: Checkout code
+#        uses: actions/checkout@v3
+#
+#      - name: Set up JDK 17
+#        uses: actions/setup-java@v2
+#        with:
+#          distribution: 'adopt'
+#          java-version: '17'
+#
+#      - name: Set up Flutter
+#        uses: subosito/flutter-action@v2
+#        with:
+#          flutter-version: '3.22.0'
+#          channel: 'stable'
+#      - name: Install dependencies
+#        run: flutter pub get
+#
+#      - name: Run tests
+#        run: flutter test
+#
+#      - name: Build APK
+#        run: flutter build apk --release
+#
+#      - name: Upload APK Artifact
+#        uses: actions/upload-artifact@v2
+#        with:
+#          name: app-release
+#          path: build/app/outputs/flutter-apk/app-release.apk
+#          if-no-files-found: warn
+
+
+#
+#      - name: Download and Set Up Firebase CLI
+#        run: |
+#          curl -sL https://firebase.tools | bash
+#          echo $FIREBASE_SERVICE_ACCOUNT_KEY | base64 --decode > $GITHUB_WORKSPACE/firebase_service_account.json
+#
+#      - name:  Authenticate with Firebase
+#        env:
+#          FIREBASE_SERVICE_ACCOUNT_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}
+#        run: |
+#             echo $FIREBASE_SERVICE_ACCOUNT_KEY | base64 --decode > $GITHUB_WORKSPACE/firebase_service_account.json
+#
+#      - name: Upload to Firebase App Distribution
+#        env:
+#          FIREBASE_SERVICE_ACCOUNT_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}
+#          ANDROID_FIREBASE_APP_ID: ${{ secrets.ANDROID_FIREBASE_APP_ID }}
+#        run: |
+#             appdistribution: distribute /home/runner/work/web_app/web_app/build/app/outputs/flutter-apk/app-release.apk $ANDROID_FIREBASE_APP_ID
+
+#  build_web:
+#    name: Build Flutter (Web)
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v3
+#      - uses: subosito/flutter-action@v1
+#        with:
+#          flutter-version: '3.22.0' # Replace with your project's version of Flutter.
+#          channel: 'stable'
+#      - run: flutter pub get
+#      - run: flutter config --enable-web
+#      - run: flutter build web
+#      - name: Archive Production Artifact
+#        uses: actions/upload-artifact@master
+#        with:
+#          name: web-build
+#          path: build/web
+#  deploy:
+#    needs: build_web
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: checkout
+#        uses: actions/checkout@v3
+#      - name: Download Artifact
+#        uses: actions/download-artifact@master
+#        with:
+#          name: web-build
+#          path: build/web
+#      - name: Deploy to Firebase
+#        uses: FirebaseExtended/action-hosting-deploy@v0
+#        with:
+#          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+#          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_WEB_APP_KMY3V3 }}'
+#          channelId: live
+#          projectId: web-app-kmy3v3
