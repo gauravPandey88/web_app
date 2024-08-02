@@ -85,7 +85,7 @@ jobs:
             curl -sL https://firebase.tools | bash
             echo $FIREBASE_SERVICE_ACCOUNT_KEY | base64 --decode > $GITHUB_WORKSPACE/firebase_service_account.json
 
-      - name:  Authenticate with Firebase
+      - name: Authenticate with Firebase
         env:
          FIREBASE_SERVICE_ACCOUNT_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}
         run: |
@@ -96,7 +96,7 @@ jobs:
         with:
           debug: true
           appId: ${{secrets.ANDROID_FIREBASE_APP_ID}}
-          serviceCredentialsFileContent: ${{secrets.FIREBASE_SERVICE_ACCOUNT_KEY}}
+#          serviceCredentialsFileContent: ${{secrets.FIREBASE_SERVICE_ACCOUNT_KEY}}
           groups: test
           file: app-release.apk
 
