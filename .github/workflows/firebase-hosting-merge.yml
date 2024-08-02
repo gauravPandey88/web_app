@@ -80,23 +80,13 @@ jobs:
       - uses: actions/download-artifact@v2
         with:
           name: app-artifacts
-      - name: Download and Set Up Firebase CLI
-        run: |
-            curl -sL https://firebase.tools | bash
-            echo $FIREBASE_SERVICE_ACCOUNT_KEY | base64 --decode > $GITHUB_WORKSPACE/firebase_service_account.json
-
-      - name: Authenticate with Firebase
-        env:
-         FIREBASE_SERVICE_ACCOUNT_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}
-        run: |
-            echo $FIREBASE_SERVICE_ACCOUNT_KEY | base64 --decode > $GITHUB_WORKSPACE/firebase_service_account.json
 
       - name: Upload headquarter artifact to Firebase App Distribution
         uses: wzieba/Firebase-Distribution-Github-Action@v1
         with:
           debug: true
           appId: ${{secrets.ANDROID_FIREBASE_APP_ID}}
-#          serviceCredentialsFileContent: ${{secrets.FIREBASE_SERVICE_ACCOUNT_KEY}}
+          serviceCredentialsFileContent: ${{secrets.FIREBASE_SERVICE_ACCOUNT_WEB_APP_KMY3V3}}
           groups: test
           file: app-release.apk
 
