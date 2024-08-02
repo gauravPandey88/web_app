@@ -67,9 +67,9 @@ jobs:
             build/app/outputs/flutter-apk/app-release.apk
             
 
-  distribute_android_headquarter:
+  distribute_android_build:
     needs: build
-    name : Deploy the Headquarter apk to the Firebase
+    name : Deploy apk to the Firebase
     runs-on: ubuntu-latest
 
     steps:
@@ -80,6 +80,16 @@ jobs:
       - uses: actions/download-artifact@v2
         with:
           name: app-artifacts
+      - name: Download and Set Up Firebase CLI
+        run: |
+            curl -sL https://firebase.tools | bash
+            echo $FIREBASE_SERVICE_ACCOUNT_KEY | base64 --decode > $GITHUB_WORKSPACE/firebase_service_account.json
+
+      - name:  Authenticate with Firebase
+        env:
+         FIREBASE_SERVICE_ACCOUNT_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}
+        run: |
+            echo $FIREBASE_SERVICE_ACCOUNT_KEY | base64 --decode > $GITHUB_WORKSPACE/firebase_service_account.json
 
       - name: Upload headquarter artifact to Firebase App Distribution
         uses: wzieba/Firebase-Distribution-Github-Action@v1
