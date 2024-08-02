@@ -118,7 +118,7 @@ jobs:
           FIREBASE_SERVICE_ACCOUNT_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}
           ANDROID_FIREBASE_APP_ID: ${{ secrets.ANDROID_FIREBASE_APP_ID }}
         run: |
-            firebase distribution:distribute /home/runner/work/web_app/web_app/build/app/outputs/flutter-apk/app-release.apk --app $ANDROID_FIREBASE_APP_ID
+            firebase distribution:distribute /home/runner/work/web_app/web_app/build/app/outputs/flutter-apk/app-release.apk --app-id $ANDROID_FIREBASE_APP_ID
 
   build_web:
     name: Build Flutter (Web)
