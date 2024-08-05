@@ -172,27 +172,10 @@ jobs:
           - name: Download and Set Up Firebase CLI
             run: curl -sL https://firebase.tools | bash
 
-          - name: Authenticate with Firebase
-            env:
-              FIREBASE_SERVICE_ACCOUNT_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}
-            run: |
-                echo $FIREBASE_SERVICE_ACCOUNT_KEY | base64 --decode > $GITHUB_WORKSPACE/firebase_service_account.json
-                gcloud auth activate-service-account --key-file=$GITHUB_WORKSPACE/firebase_service_account.json
-                gcloud config set project ${{ secrets.FIREBASE_SERVICE_ACCOUNT_WEB_APP_KMY3V3 }}
-                gcloud auth print-access-token > $GITHUB_WORKSPACE/firebase_token.txt
-                firebase use --project ${{ secrets.FIREBASE_SERVICE_ACCOUNT_WEB_APP_KMY3V3 }}  
-
-          - name: Deploy to Firebase Hosting
-            env:
-             GOOGLE_APPLICATION_CREDENTIALS: $GITHUB_WORKSPACE/firebase_service_account.json
-             FIREBASE_TOKEN: $(cat $GITHUB_WORKSPACE/firebase_token.txt)
-            run: |
-              firebase deploy --only hosting --token "$FIREBASE_TOKEN"    
-
-#          - name: Deploy to Firebase
-#            uses: wzieba/Firebase-Distribution-Github-Action@v1
-#            with:
-#              repoToken: '${{ secrets.GITHUB_TOKEN }}'
-#              firebaseServiceAccount: ${{secrets.CREDENTIAL_FILE_CONTENT}}
-#              channelId: live
-#              projectId: web-app-kmy3v3
+          - name: Deploy to Firebase
+            uses: FirebaseExtended/action-hosting-deploy@v0
+            with:
+              repoToken: '${{ secrets.GITHUB_TOKEN }}'
+              firebaseServiceAccount: '${{ secrets.CREDENTIAL_FILE_CONTENT }}'
+              channelId: live
+              projectId: web-app-kmy3v3
