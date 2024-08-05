@@ -145,7 +145,7 @@ jobs:
     name: Build Flutter (Web)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v1
       - uses: subosito/flutter-action@v1
         with:
           flutter-version: '3.22.0' # Replace with your project's version of Flutter.
@@ -159,22 +159,20 @@ jobs:
           name: web-build
           path: build/web
   deploy:
-    needs: build_web
-    runs-on: ubuntu-latest
-    steps:
-      - name: checkout
-        uses: actions/checkout@v3
-      - name: Install Firebase CLI
-        run: npm install -g firebase-tools
-      - name: Download Artifact
-        uses: actions/download-artifact@master
-        with:
-          name: web-build
-          path: build/web
-      - name: Deploy to Firebase
-        uses: FirebaseExtended/action-hosting-deploy@v0
-        with:
-          repoToken: '${{ secrets.GITHUB_TOKEN }}'
-          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_WEB_APP_KMY3V3 }}'
-          channelId: live
-          projectId: web-app-kmy3v3
+        needs: build_web
+        runs-on: ubuntu-latest
+        steps:
+          - name: checkout
+            uses: actions/checkout@v1
+          - name: Download Artifact
+            uses: actions/download-artifact@master
+            with:
+              name: web-build
+              path: build/web
+          - name: Deploy to Firebase
+            uses: FirebaseExtended/action-hosting-deploy@v0
+            with:
+              repoToken: '${{ secrets.GITHUB_TOKEN }}'
+              firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_WEB_APP_KMY3V3 }}'
+              channelId: live
+              projectId: web-app-kmy3v3
