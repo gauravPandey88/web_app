@@ -175,7 +175,7 @@ jobs:
           - name: Deploy to Firebase
             uses: FirebaseExtended/action-hosting-deploy@v0
             with:
-              repoToken: '${{ secrets.GITHUB_TOKEN }}'
+              repoToken: '${{ secrets.FIREBASE_TOKEN }}'
               firebaseServiceAccount: '${{ secrets.CREDENTIAL_FILE_CONTENT }}'
               channelId: live
               projectId: web-app-kmy3v3
